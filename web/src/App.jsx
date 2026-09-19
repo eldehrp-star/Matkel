@@ -35,22 +35,8 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="movimiento/:type" element={<Movement />} />
         <Route path="cierre" element={<CloseCaja />} />
-        <Route
-          path="historial"
-          element={
-            <PrivateRoute adminOnly>
-              <History />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="historial/:id"
-          element={
-            <PrivateRoute adminOnly>
-              <HistoryDetail />
-            </PrivateRoute>
-          }
-        />
+        <Route path="historial" element={<History />} />
+        <Route path="historial/:id" element={<HistoryDetail />} />
         <Route path="cuenta" element={<ChangePin />} />
         <Route
           path="personal"

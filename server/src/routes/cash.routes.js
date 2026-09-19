@@ -1,6 +1,6 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
-const { requireAuth, requireAdmin } = require('../middleware/requireAuth');
+const { requireAuth } = require('../middleware/requireAuth');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -174,10 +174,16 @@ router.post('/close', async (req, res) => {
   res.json(await serializeSession(updated));
 });
 
-// Historial de cajas cerradas (solo administrador: ve quien abrio/cerro cada caja)
-router.get('/history', requireAdmin, async (req, res) => {
+// Historial de cajas cerradas. Un administrador ve todas; un cajero solo
+// ve las cajas que el mismo abrio o cerro.
+router.get('/history', async (req, res) => {
+  const isAdmin = req.staff.role === 'ADMIN';
+
   const sessions = await prisma.cashSession.findMany({
-    where: { status: 'CLOSED' },
+    where: {
+      status: 'CLOSED',
+      ...(isAdmin ? {} : { OR: [{ openedById: req.staff.sub }, { closedById: req.staff.sub }] }),
+    },
     orderBy: { closedAt: 'desc' },
     take: 50,
     include: {
@@ -201,9 +207,16 @@ router.get('/history', requireAdmin, async (req, res) => {
   );
 });
 
-router.get('/history/:id', requireAdmin, async (req, res) => {
+router.get('/history/:id', async (req, res) => {
   const session = await prisma.cashSession.findUnique({ where: { id: req.params.id } });
   if (!session) return res.status(404).json({ error: 'No encontrada' });
+
+  const isAdmin = req.staff.role === 'ADMIN';
+  const isOwner = session.openedById === req.staff.sub || session.closedById === req.staff.sub;
+  if (!isAdmin && !isOwner) {
+    return res.status(403).json({ error: 'No puedes ver el historial de otro usuario' });
+  }
+
   res.json(await serializeSession(session));
 });
 
