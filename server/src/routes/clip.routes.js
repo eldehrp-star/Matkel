@@ -7,11 +7,13 @@ const router = express.Router();
 
 // --- Utilidades ---
 
-// Confirmado con una notificacion de prueba real (Postback Webhook, Sep 2026)
-// que el payload de Clip trae: tip, term, amount, status, user_id, currency,
-// latitude, longitude, receipt_no, merch_inv_id, payment_date, merchant_name,
-// transaction_id, src_transaction_id. Se dejan tambien nombres alternativos
-// por si otros eventos (reembolsos, etc.) usan otras llaves.
+// Confirmado con notificaciones reales (Postback Webhook, Sep 2026) que el
+// payload de Clip trae: id, tip, term, last4, amount, issuer, status,
+// user_id, currency, latitude, longitude, receipt_no, merch_inv_id,
+// payment_date (timestamp unix en segundos), merchant_name, transaction_id,
+// src_transaction_id. Clip no manda un campo de "metodo de pago" explicito;
+// una venta marcada como efectivo llega con last4 "0000" e issuer vacio,
+// mientras que una venta con tarjeta trae el banco emisor en issuer.
 function extractFields(payload) {
   const body = payload?.data || payload?.transaction || payload || {};
 
@@ -22,10 +24,20 @@ function extractFields(payload) {
     return null;
   };
 
+  const parseDate = (dateRaw) => {
+    if (!dateRaw) return new Date();
+    if (/^\d+$/.test(String(dateRaw))) {
+      // timestamp unix en segundos (formato usado por Clip en payment_date)
+      return new Date(Number(dateRaw) * 1000);
+    }
+    const parsed = new Date(dateRaw);
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+  };
+
   const amountRaw = pick('amount', 'monto', 'total', 'amount_total');
   const dateRaw = pick('payment_date', 'created_at', 'date', 'fecha', 'transaction_date', 'timestamp');
-  const parsedDate = dateRaw ? new Date(dateRaw) : new Date();
-  const occurredAt = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+  const explicitMethod = pick('payment_method', 'metodo_pago', 'payment_type');
+  const issuer = pick('issuer');
 
   return {
     clipTransactionId: pick('transaction_id', 'id', 'payment_id') ? String(pick('transaction_id', 'id', 'payment_id')) : null,
@@ -34,8 +46,8 @@ function extractFields(payload) {
     amount: amountRaw !== null ? Number(amountRaw) : null,
     currency: pick('currency', 'moneda') || 'MXN',
     status: pick('status', 'estado') ? String(pick('status', 'estado')) : null,
-    paymentMethod: pick('payment_method', 'metodo_pago', 'payment_type') ? String(pick('payment_method', 'metodo_pago', 'payment_type')) : null,
-    occurredAt,
+    paymentMethod: explicitMethod ? String(explicitMethod) : issuer ? 'CARD' : 'CASH',
+    occurredAt: parseDate(dateRaw),
   };
 }
 
@@ -74,6 +86,35 @@ async function findSessionForDate(date) {
   });
 }
 
+// Cuando Clip reporta una venta en efectivo (issuer vacio, ver extractFields)
+// con estado pagado, ese dinero sí entra fisicamente a la caja, asi que se
+// registra como una entrada automatica en la caja que este abierta en ese
+// momento. Se vincula por sourceClipTransactionId para no duplicarlo si
+// Clip reenvia la misma notificacion.
+async function maybeCreateAutomaticCashMovement(clipTransaction) {
+  if (clipTransaction.paymentMethod !== 'CASH') return;
+  if (clipTransaction.status !== 'PAID') return;
+  if (!clipTransaction.amount || Number(clipTransaction.amount) <= 0) return;
+
+  const existing = await prisma.cashMovement.findUnique({
+    where: { sourceClipTransactionId: clipTransaction.id },
+  });
+  if (existing) return;
+
+  const openSession = await prisma.cashSession.findFirst({ where: { status: 'OPEN' } });
+  if (!openSession) return; // no hay caja abierta ahorita, no hay donde sumarlo
+
+  await prisma.cashMovement.create({
+    data: {
+      sessionId: openSession.id,
+      type: 'ENTRADA',
+      amount: clipTransaction.amount,
+      concept: `Venta en efectivo (Clip)${clipTransaction.receiptNumber ? ' - Folio ' + clipTransaction.receiptNumber : ''}`,
+      sourceClipTransactionId: clipTransaction.id,
+    },
+  });
+}
+
 async function upsertClipTransaction(payload, source) {
   const fields = extractFields(payload);
   const session = await findSessionForDate(fields.occurredAt);
@@ -85,15 +126,16 @@ async function upsertClipTransaction(payload, source) {
     sessionId: session?.id || null,
   };
 
-  if (fields.clipTransactionId) {
-    return prisma.clipTransaction.upsert({
-      where: { clipTransactionId: fields.clipTransactionId },
-      create: data,
-      update: data,
-    });
-  }
+  const clipTransaction = fields.clipTransactionId
+    ? await prisma.clipTransaction.upsert({
+        where: { clipTransactionId: fields.clipTransactionId },
+        create: data,
+        update: data,
+      })
+    : await prisma.clipTransaction.create({ data });
 
-  return prisma.clipTransaction.create({ data });
+  await maybeCreateAutomaticCashMovement(clipTransaction);
+  return clipTransaction;
 }
 
 // --- Rutas ---

@@ -12,7 +12,10 @@ automáticamente en el sistema.
 - Pueden registrar **entradas y salidas de efectivo** (fondos, compras,
   retiros) durante el turno.
 - Las **ventas de Clip llegan solas** al sistema (vía webhook) y se muestran
-  junto a la caja del turno en el que ocurrieron.
+  junto a la caja del turno en el que ocurrieron. Si una venta se cobró en
+  **efectivo** desde Clip (se detecta porque no trae banco emisor de
+  tarjeta), se suma automáticamente al efectivo esperado de la caja abierta;
+  las ventas con tarjeta solo se muestran de forma informativa.
 - Al terminar el turno, **cierran la caja** contando el efectivo físico; el
   sistema muestra el efectivo esperado y la diferencia contra lo contado.
 - Hay un **historial** de cajas cerradas y un panel de **administrador**

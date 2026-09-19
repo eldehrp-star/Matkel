@@ -54,7 +54,7 @@ async function serializeSession(session) {
       amount: toNumber(m.amount),
       concept: m.concept,
       createdAt: m.createdAt,
-      createdBy: m.createdBy?.name,
+      createdBy: m.createdBy?.name || (m.sourceClipTransactionId ? 'Clip (automático)' : null),
     })),
     clipTransactions: clipTransactions.map((t) => ({
       id: t.id,

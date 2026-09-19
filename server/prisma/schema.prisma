@@ -68,8 +68,13 @@ model CashMovement {
   amount    Decimal          @db.Decimal(10, 2)
   concept   String
   createdAt DateTime         @default(now())
-  createdById String
-  createdBy Staff            @relation(fields: [createdById], references: [id])
+  createdById String?
+  createdBy Staff?           @relation(fields: [createdById], references: [id])
+
+  // Si este movimiento se genero solo a partir de una venta en efectivo
+  // reportada por Clip, aqui se guarda esa transaccion para no duplicarlo
+  // si Clip reenvia la misma notificacion.
+  sourceClipTransactionId String? @unique
 
   @@map("cash_movements")
 }
