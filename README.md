@@ -118,19 +118,17 @@ Vas a necesitar, en este orden:
 3. En el menú lateral, entra a **Postback Webhook** y registra esta URL:
    `https://matkel-server.onrender.com/api/clip/webhook`
    (cambia el dominio por el que te haya dado Render).
-4. Configura ahí mismo un **secreto compartido** para verificar que las
-   llamadas son realmente de Clip, y pon ese mismo valor en la variable
-   `CLIP_WEBHOOK_SECRET` del backend.
-5. **Revisa el formato exacto** que Clip usa para el webhook (nombre del
-   header de firma y los campos del JSON) y compáralo con
-   `server/src/routes/clip.routes.js`. Ya dejé el código preparado para leer
-   los campos más comunes (`amount`/`monto`, `receipt_number`/`folio`, etc.)
-   y para aceptar la firma como HMAC-SHA256 o como secreto compartido en un
-   header — pero como Clip pide cuenta de desarrollador para ver la doc
-   completa, confírmalo con tu cuenta ya activa y ajusta esa función si hace
-   falta. El sistema siempre guarda el mensaje completo que manda Clip, así
-   que ningún dato se pierde aunque haya que afinar el mapeo de campos.
-6. Como respaldo (por si un webhook no llega), hay un botón/endpoint de
+4. Ya se confirmó con una notificación de prueba real el formato del JSON
+   que manda Clip (`transaction_id`, `receipt_no`, `amount`, `status`,
+   `payment_date`, etc.) y el código en `server/src/routes/clip.routes.js`
+   ya está ajustado para leerlo correctamente. El panel de Postback Webhook
+   de Clip no pide un secreto para firmar los envíos, así que por ahora
+   `CLIP_WEBHOOK_SECRET` se deja vacío (el servidor acepta las notificaciones
+   sin exigir una firma). Como las ventas de Clip solo se muestran de forma
+   informativa y no afectan el cálculo del efectivo esperado en caja, el
+   riesgo de dejarlo así es bajo — si más adelante Clip agrega una forma de
+   firmar sus webhooks, se puede activar configurando esa variable.
+5. Como respaldo (por si un webhook no llega), hay un botón/endpoint de
    sincronización manual (`POST /api/clip/sync`) que jala las transacciones
    de los últimos días directamente desde la API de Clip.
 

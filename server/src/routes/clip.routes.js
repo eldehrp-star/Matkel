@@ -7,11 +7,11 @@ const router = express.Router();
 
 // --- Utilidades ---
 
-// El payload exacto que manda Clip via webhook no esta confirmado (se requiere
-// cuenta de desarrollador para verlo en developer.clip.mx). Esta funcion busca
-// los campos mas comunes de forma defensiva y siempre guarda el payload
-// crudo en rawPayload para que nada se pierda aunque el nombre de un campo
-// no coincida. Ajusta esta funcion en cuanto confirmes el formato real.
+// Confirmado con una notificacion de prueba real (Postback Webhook, Sep 2026)
+// que el payload de Clip trae: tip, term, amount, status, user_id, currency,
+// latitude, longitude, receipt_no, merch_inv_id, payment_date, merchant_name,
+// transaction_id, src_transaction_id. Se dejan tambien nombres alternativos
+// por si otros eventos (reembolsos, etc.) usan otras llaves.
 function extractFields(payload) {
   const body = payload?.data || payload?.transaction || payload || {};
 
@@ -23,11 +23,11 @@ function extractFields(payload) {
   };
 
   const amountRaw = pick('amount', 'monto', 'total', 'amount_total');
-  const dateRaw = pick('created_at', 'date', 'fecha', 'transaction_date', 'timestamp');
+  const dateRaw = pick('payment_date', 'created_at', 'date', 'fecha', 'transaction_date', 'timestamp');
 
   return {
-    clipTransactionId: pick('id', 'transaction_id', 'payment_id') ? String(pick('id', 'transaction_id', 'payment_id')) : null,
-    receiptNumber: pick('receipt_number', 'folio', 'receipt') ? String(pick('receipt_number', 'folio', 'receipt')) : null,
+    clipTransactionId: pick('transaction_id', 'id', 'payment_id') ? String(pick('transaction_id', 'id', 'payment_id')) : null,
+    receiptNumber: pick('receipt_no', 'receipt_number', 'folio', 'receipt') ? String(pick('receipt_no', 'receipt_number', 'folio', 'receipt')) : null,
     paymentRequestCode: pick('payment_request_code') ? String(pick('payment_request_code')) : null,
     amount: amountRaw !== null ? Number(amountRaw) : null,
     currency: pick('currency', 'moneda') || 'MXN',
