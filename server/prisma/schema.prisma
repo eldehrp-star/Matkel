@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StaffRole {
+  ADMIN
+  CAJERO
+}
+
+enum CashSessionStatus {
+  OPEN
+  CLOSED
+}
+
+enum CashMovementType {
+  ENTRADA
+  SALIDA
+}
+
+model Staff {
+  id        String    @id @default(cuid())
+  name      String
+  username  String    @unique
+  pinHash   String
+  role      StaffRole @default(CAJERO)
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+
+  openedSessions CashSession[]  @relation("OpenedBy")
+  closedSessions CashSession[]  @relation("ClosedBy")
+  movements      CashMovement[]
+
+  @@map("staff")
+}
+
+model CashSession {
+  id                String            @id @default(cuid())
+  status            CashSessionStatus @default(OPEN)
+
+  openingAmount     Decimal           @db.Decimal(10, 2)
+  openedAt          DateTime          @default(now())
+  openedById        String
+  openedBy          Staff             @relation("OpenedBy", fields: [openedById], references: [id])
+
+  closingCountedAmount Decimal?       @db.Decimal(10, 2)
+  closingExpectedAmount Decimal?      @db.Decimal(10, 2)
+  closingNotes      String?
+  closedAt          DateTime?
+  closedById        String?
+  closedBy          Staff?            @relation("ClosedBy", fields: [closedById], references: [id])
+
+  movements         CashMovement[]
+  clipTransactions  ClipTransaction[]
+
+  @@map("cash_sessions")
+}
+
+model CashMovement {
+  id        String           @id @default(cuid())
+  sessionId String
+  session   CashSession      @relation(fields: [sessionId], references: [id])
+  type      CashMovementType
+  amount    Decimal          @db.Decimal(10, 2)
+  concept   String
+  createdAt DateTime         @default(now())
+  createdById String
+  createdBy Staff            @relation(fields: [createdById], references: [id])
+
+  @@map("cash_movements")
+}
+
+model ClipTransaction {
+  id                 String       @id @default(cuid())
+  clipTransactionId  String?      @unique
+  receiptNumber      String?
+  paymentRequestCode String?
+  amount             Decimal?     @db.Decimal(10, 2)
+  currency           String?
+  status             String?
+  paymentMethod      String?
+  occurredAt         DateTime?
+  receivedAt         DateTime     @default(now())
+  source             String       @default("webhook")
+  rawPayload         Json
+
+  sessionId          String?
+  session            CashSession? @relation(fields: [sessionId], references: [id])
+
+  @@map("clip_transactions")
+}

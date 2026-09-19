@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: matkel
+      POSTGRES_PASSWORD: matkel
+      POSTGRES_DB: matkel
+    ports:
+      - '5432:5432'
+    volumes:
+      - matkel_pgdata:/var/lib/postgresql/data
+
+volumes:
+  matkel_pgdata:
