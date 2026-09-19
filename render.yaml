@@ -13,6 +13,8 @@ services:
         generateValue: true
       - key: CLIP_API_KEY
         sync: false
+      - key: CLIP_API_SECRET
+        sync: false
       - key: CLIP_API_BASE_URL
         value: https://api.clip.mx
       - key: CLIP_WEBHOOK_SECRET

@@ -116,10 +116,11 @@ router.post('/webhook', async (req, res) => {
 // por si el webhook aun no esta configurado o se perdio algun evento.
 router.post('/sync', requireAuth, requireAdmin, async (req, res) => {
   const apiKey = process.env.CLIP_API_KEY;
+  const apiSecret = process.env.CLIP_API_SECRET;
   const baseUrl = process.env.CLIP_API_BASE_URL || 'https://api.clip.mx';
 
-  if (!apiKey) {
-    return res.status(400).json({ error: 'Configura CLIP_API_KEY para poder sincronizar' });
+  if (!apiKey || !apiSecret) {
+    return res.status(400).json({ error: 'Configura CLIP_API_KEY y CLIP_API_SECRET para poder sincronizar' });
   }
 
   const { fromDate, toDate } = req.body || {};
@@ -127,10 +128,14 @@ router.post('/sync', requireAuth, requireAdmin, async (req, res) => {
   const from = fromDate ? new Date(fromDate) : new Date(to.getTime() - 24 * 60 * 60 * 1000);
 
   try {
+    // Clip usa HTTP Basic Auth: Base64("Clave API:Clave secreta") como token.
+    // Ver developer.clip.mx/reference/token-de-autenticacion
+    const authToken = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
+
     // Endpoint de referencia; confirma la ruta exacta en developer.clip.mx/reference/transactions
     const url = `${baseUrl}/v2/transactions?from=${from.toISOString()}&to=${to.toISOString()}`;
     const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${apiKey}` },
+      headers: { Authorization: `Basic ${authToken}` },
     });
 
     if (!response.ok) {

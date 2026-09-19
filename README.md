@@ -94,8 +94,9 @@ Vas a necesitar, en este orden:
    - `CLIP_API_KEY` y `CLIP_WEBHOOK_SECRET`: los ves en el Paso 3.
 5. En `matkel-web`, configura `VITE_API_URL` con la URL de `matkel-server`
    (algo como `https://matkel-server.onrender.com`).
-6. Una vez desplegado, entra a la Shell de `matkel-server` en Render y corre
-   una vez: `npm run seed` (esto crea tu usuario administrador).
+6. El servidor crea tu usuario administrador solo la primera vez que arranca
+   (usando `SEED_ADMIN_USERNAME` / `SEED_ADMIN_PIN`), así que no necesitas
+   entrar a ninguna terminal.
 
 > El plan gratuito de Render "duerme" el servicio si no se usa por un rato y
 > tarda unos segundos en despertar con la primera visita del día. Si eso te
@@ -104,13 +105,17 @@ Vas a necesitar, en este orden:
 
 ### Paso 3 — Conectar con Clip
 
-1. Entra a [developer.clip.mx](https://developer.clip.mx) e inicia sesión con
-   tu cuenta de Clip (la misma con la que ya cobras). Si no tienes acceso de
-   desarrollador, busca la opción para solicitarlo o escribe a soporte de
-   Clip Developers desde ese portal — la doc indica que responden en menos de
-   1 hora hábil.
-2. Genera tu **API key** — va en la variable `CLIP_API_KEY`.
-3. Busca la sección de **Webhooks / Postback Webhook** y registra esta URL:
+1. Entra a [dashboard.developer.clip.mx](https://dashboard.developer.clip.mx)
+   e inicia sesión con tu cuenta de Clip (la misma con la que ya cobras).
+2. En **Credenciales → Producción**, crea una credencial (elige "Pagos
+   presenciales"). Te va a dar dos valores — **guárdalos de inmediato**,
+   la Clave secreta solo se muestra una vez:
+   - **Clave API** → variable `CLIP_API_KEY`
+   - **Clave secreta** → variable `CLIP_API_SECRET`
+   Clip combina ambas como `Base64("Clave API:Clave secreta")` para
+   autenticar (HTTP Basic Auth) — el código ya lo hace así en
+   `server/src/routes/clip.routes.js`.
+3. En el menú lateral, entra a **Postback Webhook** y registra esta URL:
    `https://matkel-server.onrender.com/api/clip/webhook`
    (cambia el dominio por el que te haya dado Render).
 4. Configura ahí mismo un **secreto compartido** para verificar que las
