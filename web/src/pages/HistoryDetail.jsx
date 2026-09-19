@@ -20,8 +20,8 @@ export default function HistoryDetail() {
   return (
     <div>
       <div className="card">
-        <p>Abierta: {formatDateTime(session.openedAt)}</p>
-        <p>Cerrada: {formatDateTime(session.closedAt)}</p>
+        <p>Abierta: {formatDateTime(session.openedAt)} — por {session.openedByName || '—'}</p>
+        <p>Cerrada: {formatDateTime(session.closedAt)} — por {session.closedByName || '—'}</p>
         <p>Efectivo inicial: {formatMoney(session.openingAmount)}</p>
         <p>Efectivo esperado: {formatMoney(session.closingExpectedAmount)}</p>
         <p>Efectivo contado: {formatMoney(session.closingCountedAmount)}</p>
@@ -38,6 +38,9 @@ export default function HistoryDetail() {
               <span className={m.type === 'ENTRADA' ? 'positive' : 'negative'}>
                 {m.type === 'ENTRADA' ? '+' : '-'}
                 {formatMoney(m.amount)}
+              </span>
+              <span className="muted small">
+                {formatDateTime(m.createdAt)} · {m.createdBy || '—'}
               </span>
             </li>
           ))}

@@ -23,6 +23,9 @@ export default function History() {
         <li key={s.id}>
           <Link to={`/historial/${s.id}`} className="history-row">
             <span>{formatDateTime(s.closedAt)}</span>
+            <span className="muted small">
+              Abrió: {s.openedByName || '—'} · Cerró: {s.closedByName || '—'}
+            </span>
             <span>Contado: {formatMoney(s.closingCountedAmount)}</span>
             <span className={s.difference === 0 ? 'muted small' : s.difference > 0 ? 'positive small' : 'negative small'}>
               Diferencia: {formatMoney(s.difference)}

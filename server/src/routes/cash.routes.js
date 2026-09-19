@@ -1,6 +1,6 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
-const { requireAuth } = require('../middleware/requireAuth');
+const { requireAuth, requireAdmin } = require('../middleware/requireAuth');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -37,12 +37,19 @@ async function serializeSession(session) {
   const clipTotal = clipTransactions.reduce((sum, t) => sum + toNumber(t.amount), 0);
   const expectedCash = await computeExpectedCash(session.id);
 
+  const [openedBy, closedBy] = await Promise.all([
+    session.openedById ? prisma.staff.findUnique({ where: { id: session.openedById }, select: { name: true } }) : null,
+    session.closedById ? prisma.staff.findUnique({ where: { id: session.closedById }, select: { name: true } }) : null,
+  ]);
+
   return {
     id: session.id,
     status: session.status,
     openingAmount: toNumber(session.openingAmount),
     openedAt: session.openedAt,
+    openedByName: openedBy?.name || null,
     closedAt: session.closedAt,
+    closedByName: closedBy?.name || null,
     closingCountedAmount: session.closingCountedAmount !== null ? toNumber(session.closingCountedAmount) : null,
     closingExpectedAmount: session.closingExpectedAmount !== null ? toNumber(session.closingExpectedAmount) : null,
     closingNotes: session.closingNotes,
@@ -167,8 +174,8 @@ router.post('/close', async (req, res) => {
   res.json(await serializeSession(updated));
 });
 
-// Historial de cajas cerradas
-router.get('/history', async (req, res) => {
+// Historial de cajas cerradas (solo administrador: ve quien abrio/cerro cada caja)
+router.get('/history', requireAdmin, async (req, res) => {
   const sessions = await prisma.cashSession.findMany({
     where: { status: 'CLOSED' },
     orderBy: { closedAt: 'desc' },
@@ -194,7 +201,7 @@ router.get('/history', async (req, res) => {
   );
 });
 
-router.get('/history/:id', async (req, res) => {
+router.get('/history/:id', requireAdmin, async (req, res) => {
   const session = await prisma.cashSession.findUnique({ where: { id: req.params.id } });
   if (!session) return res.status(404).json({ error: 'No encontrada' });
   res.json(await serializeSession(session));

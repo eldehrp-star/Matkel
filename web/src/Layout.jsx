@@ -24,13 +24,15 @@ export default function Layout() {
         <NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')}>
           Caja
         </NavLink>
-        <NavLink to="/historial" className={({ isActive }) => (isActive ? 'active' : '')}>
-          Historial
-        </NavLink>
         {staff?.role === 'ADMIN' && (
-          <NavLink to="/personal" className={({ isActive }) => (isActive ? 'active' : '')}>
-            Personal
-          </NavLink>
+          <>
+            <NavLink to="/historial" className={({ isActive }) => (isActive ? 'active' : '')}>
+              Historial
+            </NavLink>
+            <NavLink to="/personal" className={({ isActive }) => (isActive ? 'active' : '')}>
+              Personal
+            </NavLink>
+          </>
         )}
       </nav>
     </div>

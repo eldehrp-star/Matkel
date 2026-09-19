@@ -74,6 +74,7 @@ export default function Dashboard() {
 
   return (
     <div>
+      <p className="muted small">Caja abierta por {session.openedByName || '—'}</p>
       <div className="stats-grid">
         <div className="stat-card">
           <span className="muted">Efectivo esperado</span>
