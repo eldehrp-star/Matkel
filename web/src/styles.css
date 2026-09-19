@@ -40,6 +40,11 @@ button {
   min-height: 100vh;
 }
 
+.account-link {
+  color: inherit;
+  text-decoration: none;
+}
+
 .app-header {
   display: flex;
   justify-content: space-between;

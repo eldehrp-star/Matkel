@@ -22,6 +22,8 @@ async function request(path, { method = 'GET', body, token } = {}) {
 export const api = {
   login: (username, pin) => request('/auth/login', { method: 'POST', body: { username, pin } }),
   me: (token) => request('/auth/me', { token }),
+  changePin: (token, currentPin, newPin) =>
+    request('/auth/change-pin', { method: 'POST', token, body: { currentPin, newPin } }),
 
   currentSession: (token) => request('/cash/current', { token }),
   openSession: (token, openingAmount) => request('/cash/open', { method: 'POST', token, body: { openingAmount } }),

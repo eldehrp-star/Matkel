@@ -8,6 +8,7 @@ import CloseCaja from './pages/CloseCaja.jsx';
 import History from './pages/History.jsx';
 import HistoryDetail from './pages/HistoryDetail.jsx';
 import Staff from './pages/Staff.jsx';
+import ChangePin from './pages/ChangePin.jsx';
 
 function PrivateRoute({ children, adminOnly = false }) {
   const { token, staff, loading } = useAuth();
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="cierre" element={<CloseCaja />} />
         <Route path="historial" element={<History />} />
         <Route path="historial/:id" element={<HistoryDetail />} />
+        <Route path="cuenta" element={<ChangePin />} />
         <Route
           path="personal"
           element={

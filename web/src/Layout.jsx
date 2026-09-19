@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
 
 export default function Layout() {
@@ -7,10 +7,10 @@ export default function Layout() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div>
+        <Link to="/cuenta" className="account-link">
           <strong>{staff?.name}</strong>
           <span className="muted"> · {staff?.role === 'ADMIN' ? 'Administrador' : 'Cajero'}</span>
-        </div>
+        </Link>
         <button className="link-button" onClick={logout}>
           Salir
         </button>
