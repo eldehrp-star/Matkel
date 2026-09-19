@@ -24,6 +24,8 @@ function extractFields(payload) {
 
   const amountRaw = pick('amount', 'monto', 'total', 'amount_total');
   const dateRaw = pick('payment_date', 'created_at', 'date', 'fecha', 'transaction_date', 'timestamp');
+  const parsedDate = dateRaw ? new Date(dateRaw) : new Date();
+  const occurredAt = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
 
   return {
     clipTransactionId: pick('transaction_id', 'id', 'payment_id') ? String(pick('transaction_id', 'id', 'payment_id')) : null,
@@ -33,7 +35,7 @@ function extractFields(payload) {
     currency: pick('currency', 'moneda') || 'MXN',
     status: pick('status', 'estado') ? String(pick('status', 'estado')) : null,
     paymentMethod: pick('payment_method', 'metodo_pago', 'payment_type') ? String(pick('payment_method', 'metodo_pago', 'payment_type')) : null,
-    occurredAt: dateRaw ? new Date(dateRaw) : new Date(),
+    occurredAt,
   };
 }
 
