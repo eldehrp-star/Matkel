@@ -113,10 +113,14 @@ export default function Dashboard() {
           {session.clipTransactions.map((t) => (
             <li key={t.id}>
               <span>{t.receiptNumber ? `Folio ${t.receiptNumber}` : 'Venta Clip'}</span>
-              <span>
-                {formatMoney(t.amount)}
-                {t.tip > 0 && <span className="muted small"> (propina {formatMoney(t.tip)})</span>}
-              </span>
+              {t.status === 'PAID' ? (
+                <span>
+                  {formatMoney(t.amount)}
+                  {t.tip > 0 && <span className="muted small"> (propina {formatMoney(t.tip)})</span>}
+                </span>
+              ) : (
+                <span className="negative">Cancelada/reembolsada ({formatMoney(t.amount)})</span>
+              )}
               <span className="muted small">{formatDateTime(t.occurredAt)}</span>
             </li>
           ))}

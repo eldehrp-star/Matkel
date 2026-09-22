@@ -34,8 +34,19 @@ async function serializeSession(session) {
     orderBy: { occurredAt: 'asc' },
   });
 
-  const clipTotal = clipTransactions.reduce((sum, t) => sum + toNumber(t.amount), 0);
-  const tipsTotal = clipTransactions.reduce((sum, t) => sum + toNumber(t.tip), 0);
+  // Una transaccion de Clip con status distinto a "PAID" (ej. null) es una
+  // venta cancelada/reembolsada (Clip la manda como una transaccion nueva,
+  // sin vincularla a la original) o que nunca se completo. En ambos casos
+  // no debe sumar como venta; y si el monto coincide con una venta pagada
+  // ya contada, se resta para que el total quede neto de reembolsos.
+  const clipTotal = clipTransactions.reduce(
+    (sum, t) => sum + (t.status === 'PAID' ? toNumber(t.amount) : -toNumber(t.amount)),
+    0
+  );
+  const tipsTotal = clipTransactions.reduce(
+    (sum, t) => sum + (t.status === 'PAID' ? toNumber(t.tip) : -toNumber(t.tip)),
+    0
+  );
   const expectedCash = await computeExpectedCash(session.id);
 
   const [openedBy, closedBy] = await Promise.all([

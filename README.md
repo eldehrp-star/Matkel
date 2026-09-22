@@ -16,6 +16,13 @@ automáticamente en el sistema.
   **efectivo** desde Clip (se detecta porque no trae banco emisor de
   tarjeta), se suma automáticamente al efectivo esperado de la caja abierta;
   las ventas con tarjeta solo se muestran de forma informativa.
+- Las **propinas** cobradas por Clip se suman y se muestran por turno.
+- Si una venta con tarjeta se **cancela o reembolsa** en Clip, el sistema lo
+  detecta (Clip la manda como una notificación nueva con `status: null`, sin
+  vincularla a la venta original) y la resta del total de ventas/propinas,
+  marcándola como "Cancelada/reembolsada" en la lista. Como Clip no permite
+  reembolsar pagos en efectivo, esto nunca afecta el efectivo esperado de la
+  caja.
 - Al terminar el turno, **cierran la caja** contando el efectivo físico; el
   sistema muestra el efectivo esperado y la diferencia contra lo contado.
 - Hay un **historial** de cajas cerradas y un panel de **administrador**
