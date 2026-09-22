@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api';
+import { formatMoney, formatDateTime } from '../format';
 
 export default function Staff() {
   const { token } = useAuth();
@@ -8,6 +9,7 @@ export default function Staff() {
   const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', username: '', pin: '', role: 'CAJERO' });
   const [submitting, setSubmitting] = useState(false);
+  const [liveSession, setLiveSession] = useState(undefined);
 
   async function load() {
     try {
@@ -19,6 +21,16 @@ export default function Staff() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    function loadLiveSession() {
+      api.currentSession(token).then(setLiveSession).catch(() => {});
+    }
+    loadLiveSession();
+    const interval = setInterval(loadLiveSession, 15000);
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -44,6 +56,21 @@ export default function Staff() {
 
   return (
     <div>
+      <div className="card">
+        <h2>Caja en vivo</h2>
+        {liveSession === undefined && <p className="muted">Cargando...</p>}
+        {liveSession === null && <p className="muted">No hay ninguna caja abierta en este momento.</p>}
+        {liveSession && (
+          <>
+            <p>
+              Abierta por <strong>{liveSession.openedByName || '—'}</strong> desde{' '}
+              {formatDateTime(liveSession.openedAt)}
+            </p>
+            <p className="muted small">Efectivo esperado ahora: {formatMoney(liveSession.expectedCash)}</p>
+          </>
+        )}
+      </div>
+
       <div className="card">
         <h2>Nuevo integrante del personal</h2>
         <form onSubmit={handleSubmit} className="form">
