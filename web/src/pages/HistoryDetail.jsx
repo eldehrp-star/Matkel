@@ -26,6 +26,7 @@ export default function HistoryDetail() {
         <p>Efectivo esperado: {formatMoney(session.closingExpectedAmount)}</p>
         <p>Efectivo contado: {formatMoney(session.closingCountedAmount)}</p>
         <p>Ventas Clip: {formatMoney(session.clipSalesTotal)}</p>
+        <p>Propinas Clip: {formatMoney(session.clipTipsTotal)}</p>
         {session.closingNotes && <p className="muted">Notas: {session.closingNotes}</p>}
       </div>
 
@@ -53,7 +54,10 @@ export default function HistoryDetail() {
           {session.clipTransactions.map((t) => (
             <li key={t.id}>
               <span>{t.receiptNumber ? `Folio ${t.receiptNumber}` : 'Venta Clip'}</span>
-              <span>{formatMoney(t.amount)}</span>
+              <span>
+                {formatMoney(t.amount)}
+                {t.tip > 0 && <span className="muted small"> (propina {formatMoney(t.tip)})</span>}
+              </span>
             </li>
           ))}
         </ul>

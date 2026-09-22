@@ -35,6 +35,7 @@ async function serializeSession(session) {
   });
 
   const clipTotal = clipTransactions.reduce((sum, t) => sum + toNumber(t.amount), 0);
+  const tipsTotal = clipTransactions.reduce((sum, t) => sum + toNumber(t.tip), 0);
   const expectedCash = await computeExpectedCash(session.id);
 
   const [openedBy, closedBy] = await Promise.all([
@@ -55,6 +56,7 @@ async function serializeSession(session) {
     closingNotes: session.closingNotes,
     expectedCash,
     clipSalesTotal: clipTotal,
+    clipTipsTotal: tipsTotal,
     movements: movements.map((m) => ({
       id: m.id,
       type: m.type,
@@ -67,6 +69,7 @@ async function serializeSession(session) {
       id: t.id,
       receiptNumber: t.receiptNumber,
       amount: toNumber(t.amount),
+      tip: toNumber(t.tip),
       currency: t.currency,
       status: t.status,
       paymentMethod: t.paymentMethod,

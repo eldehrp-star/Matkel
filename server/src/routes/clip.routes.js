@@ -35,6 +35,7 @@ function extractFields(payload) {
   };
 
   const amountRaw = pick('amount', 'monto', 'total', 'amount_total');
+  const tipRaw = pick('tip', 'propina');
   const dateRaw = pick('payment_date', 'created_at', 'date', 'fecha', 'transaction_date', 'timestamp');
   const explicitMethod = pick('payment_method', 'metodo_pago', 'payment_type');
   const issuer = pick('issuer');
@@ -44,6 +45,7 @@ function extractFields(payload) {
     receiptNumber: pick('receipt_no', 'receipt_number', 'folio', 'receipt') ? String(pick('receipt_no', 'receipt_number', 'folio', 'receipt')) : null,
     paymentRequestCode: pick('payment_request_code') ? String(pick('payment_request_code')) : null,
     amount: amountRaw !== null ? Number(amountRaw) : null,
+    tip: tipRaw !== null ? Number(tipRaw) : null,
     currency: pick('currency', 'moneda') || 'MXN',
     status: pick('status', 'estado') ? String(pick('status', 'estado')) : null,
     paymentMethod: explicitMethod ? String(explicitMethod) : issuer ? 'CARD' : 'CASH',

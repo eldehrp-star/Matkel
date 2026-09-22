@@ -88,6 +88,10 @@ export default function Dashboard() {
           <span className="muted">Efectivo inicial</span>
           <strong>{formatMoney(session.openingAmount)}</strong>
         </div>
+        <div className="stat-card">
+          <span className="muted">Propinas (turno)</span>
+          <strong>{formatMoney(session.clipTipsTotal)}</strong>
+        </div>
       </div>
 
       <div className="action-row">
@@ -109,7 +113,10 @@ export default function Dashboard() {
           {session.clipTransactions.map((t) => (
             <li key={t.id}>
               <span>{t.receiptNumber ? `Folio ${t.receiptNumber}` : 'Venta Clip'}</span>
-              <span>{formatMoney(t.amount)}</span>
+              <span>
+                {formatMoney(t.amount)}
+                {t.tip > 0 && <span className="muted small"> (propina {formatMoney(t.tip)})</span>}
+              </span>
               <span className="muted small">{formatDateTime(t.occurredAt)}</span>
             </li>
           ))}

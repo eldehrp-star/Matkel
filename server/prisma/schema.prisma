@@ -85,6 +85,7 @@ model ClipTransaction {
   receiptNumber      String?
   paymentRequestCode String?
   amount             Decimal?     @db.Decimal(10, 2)
+  tip                Decimal?     @db.Decimal(10, 2)
   currency           String?
   status             String?
   paymentMethod      String?
